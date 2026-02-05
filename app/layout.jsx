@@ -1,0 +1,31 @@
+import { Inter, Cormorant_Garamond } from "next/font/google"
+import { CartProvider } from "@/components/cart-provider"
+import "./globals.css"
+
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+})
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-cormorant",
+})
+
+export const metadata = {
+  title: "HAVEN",
+  description: "Discover timeless elegance with our curated collection of premium fashion pieces.",
+}
+
+export default function RootLayout({ children }) {
+  return (
+    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+      <body className="font-sans antialiased bg-amber-900/10 min-h-screen">
+        <CartProvider>
+          {children}
+        </CartProvider>
+      </body>
+    </html>
+  )
+}
