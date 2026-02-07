@@ -1,148 +1,139 @@
+"use client"
+
 import { Navigation } from "@/components/navigation"
 import { PremiumFooter } from "@/components/footer"
 import Image from "next/image"
-
-export const metadata = {
-  title: "Our Story | Haven Home",
-  description: "Discover the artisanal heritage behind Haven Home curated collections.",
-}
+import { motion, useScroll, useTransform } from "framer-motion"
+import { useRef } from "react"
 
 export default function HeritagePage() {
+  const ref = useRef(null)
+  const { scrollYProgress } = useScroll({ target: ref })
+  const opacity = useTransform(scrollYProgress, [0, 0.2], [1, 0])
+
   return (
-    <main className="min-h-screen bg-background">
+    <main ref={ref} className="bg-background">
       <Navigation />
 
-      {/* Hero Section */}
-      <section className="pt-24 pb-20">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center min-h-[70vh]">
-            <div>
-              <h1 className="text-4xl lg:text-6xl font-light tracking-tight mb-8">
-                Crafting Spaces <br />
-                <span className="italic">With Soul</span>
-              </h1>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                Haven Home was born from a simple belief: your home should tell your story. Every piece we curate
-                carries the warmth of handcrafted excellence and the quiet confidence of timeless design.
-              </p>
-              <p className="text-muted-foreground leading-relaxed">
-                Since our founding in 2018, we have partnered with artisans around the world who share our
-                commitment to sustainable materials, ethical practices, and extraordinary craftsmanship.
-              </p>
-            </div>
+      {/* SCENE 1 – Hero */}
+      <section className="min-h-screen lg:h-screen flex flex-col lg:grid lg:grid-cols-2">
 
-            <div className="relative aspect-[4/5] overflow-hidden">
-              <Image
-                src="/images/artisan-ceramics-workshop.jpg"
-                alt="Artisan crafting ceramics in workshop"
-                fill
-                className="object-cover"
-              />
-            </div>
-          </div>
+        {/* TEXT LEFT */}
+        <div className="flex items-center justify-center px-6 sm:px-10 lg:pl-24 py-16 lg:py-0 order-2 lg:order-1">
+          <motion.div
+            initial={{ opacity: 0, y: 40 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1.2 }}
+            className="text-center lg:text-left"
+          >
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl mb-4">
+              The Story of Haven
+            </h2>
+
+            <p className="mt-4 text-xs sm:text-sm lg:text-lg text-muted-foreground max-w-md mx-auto lg:mx-0">
+              A quiet exploration of materials, memory, and the poetry of crafted space.
+            </p>
+          </motion.div>
+        </div>
+
+        {/* IMAGE RIGHT */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 1.5 }}
+          className="relative w-full h-[60vh] sm:h-[70vh] lg:h-full order-1 lg:order-2"
+        >
+          <Image
+            src="/images/artisan-ceramics-workshop.jpg"
+            alt=""
+            fill
+            priority
+            className="object-cover"
+          />
+          <motion.div style={{ opacity }} className="absolute inset-0 bg-black/20" />
+        </motion.div>
+      </section>
+
+
+      {/* SCENE 3 – Materials */}
+      <section className="min-h-screen lg:h-screen flex flex-col lg:grid lg:grid-cols-2">
+
+        {/* IMAGE LEFT */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1.2 }}
+          className="relative w-full h-[60vh] sm:h-[70vh] lg:h-full order-1"
+        >
+          <Image
+            src="/images/natural-materials-sustainable.jpg"
+            alt=""
+            fill
+            className="object-cover"
+          />
+        </motion.div>
+
+        {/* TEXT RIGHT */}
+        <div className="flex items-center px-6 sm:px-10 lg:pl-24 py-16 lg:py-0 order-2">
+          <motion.div
+            initial={{ opacity: 0, x: 40 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 1 }}
+          >
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl mb-4">
+              Materials that breathe
+            </h2>
+
+            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground leading-relaxed max-w-md">
+              We work with wood, stone, clay, linen and natural fibers — materials that age,
+              change, and carry the passage of time within their surface.
+              <br /><br />
+              No plastic, no gloss, no artificial perfection. Only honest textures,
+              subtle imperfections, and quiet tactile narratives that invite touch and reflection.
+            </p>
+          </motion.div>
         </div>
       </section>
 
-      {/* Values Section */}
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <h2 className="text-3xl lg:text-4xl font-light tracking-tight text-center mb-16">
-            Our Values
-          </h2>
 
-          <div className="grid md:grid-cols-3 gap-12">
-            <div className="text-center">
-              <div className="relative aspect-square mb-8 overflow-hidden">
-                <Image
-                  src="/images/artisan-ceramics-workshop.jpg"
-                  alt="Artisan craftsmanship"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-light mb-4">Artisan Craftsmanship</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Every piece is crafted by skilled artisans using time-honored techniques passed down through
-                generations.
-              </p>
-            </div>
+      {/* SCENE 4 – Studio reveal */}
+      <section className="relative min-h-screen">
+        <Image
+          src="/images/design-studio-interior.jpg"
+          alt=""
+          fill
+          className="object-cover"
+        />
 
-            <div className="text-center">
-              <div className="relative aspect-square mb-8 overflow-hidden">
-                <Image
-                  src="/images/natural-materials-sustainable.jpg"
-                  alt="Sustainable materials"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-light mb-4">Sustainable Materials</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                We source only the finest natural and sustainable materials, ensuring beauty that respects our
-                planet.
-              </p>
-            </div>
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1.2 }}
+          className="absolute inset-0 bg-black/30 flex items-center justify-center text-center text-background px-6"
+        >
+          <div>
+            <h2 className="font-serif text-4xl sm:text-5xl mb-6">Our Studio</h2>
 
-            <div className="text-center">
-              <div className="relative aspect-square mb-8 overflow-hidden">
-                <Image
-                  src="/images/minimalist-decor-styling.jpg"
-                  alt="Timeless design"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-              <h3 className="text-xl font-light mb-4">Timeless Design</h3>
-              <p className="text-muted-foreground leading-relaxed">
-                Our collections transcend trends, offering pieces that grow more beautiful with time and use.
-              </p>
-            </div>
+            <p className="text-background/80 max-w-md leading-relaxed mx-auto">
+              A quiet environment designed to slow down perception.  
+              A place where light, scale, and silence shape the experience of space,
+              and where every object is allowed to exist without urgency.
+            </p>
           </div>
-        </div>
+        </motion.div>
       </section>
 
-     
 
-      {/* Studio Section */}
-      <section className="py-20 bg-secondary">
-        <div className="max-w-7xl mx-auto px-6 lg:px-12">
-          <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-            <div className="relative aspect-[4/3] overflow-hidden">
-              <Image
-                src="/images/design-studio-interior.jpg"
-                alt="Haven Home Design Studio"
-                fill
-                className="object-cover"
-              />
-            </div>
-
-            <div>
-              <h2 className="text-3xl lg:text-4xl font-light tracking-tight mb-8">
-                Our Studio
-              </h2>
-              <p className="text-lg text-muted-foreground leading-relaxed mb-6">
-                Nestled in the heart of the design district, our studio serves as both a creative workshop and
-                a curated showroom where you can experience our collections firsthand.
-              </p>
-              <p className="text-muted-foreground leading-relaxed mb-8">
-                Visit us to explore our latest pieces, consult with our design team, and discover how Haven
-                Home can transform your living spaces into sanctuaries of style and comfort.
-              </p>
-
-              <div className="text-sm text-muted-foreground">
-                <p className="mb-2">
-                  <strong className="text-foreground">Address:</strong> 142 Design District, Suite 200
-                </p>
-                <p className="mb-2">
-                  <strong className="text-foreground">Hours:</strong> Mon–Sat 10am–6pm
-                </p>
-                <p>
-                  <strong className="text-foreground">Contact:</strong> studio@havenhome.com
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
+      {/* FINAL */}
+      <section className="py-20 sm:py-32 text-center px-6">
+        <motion.p
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 1 }}
+          className="text-xs sm:text-sm tracking-[0.3em] uppercase text-muted-foreground"
+        >
+          Since 2018 — Crafted slowly
+        </motion.p>
       </section>
 
       <PremiumFooter />

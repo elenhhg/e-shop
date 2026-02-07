@@ -9,6 +9,19 @@ import { PremiumFooter } from "@/components/footer"
 import { products, categories, priceRanges } from "@/lib/product"
 import { ArrowRight, SlidersHorizontal } from "lucide-react"
 
+const container = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08 },
+  },
+}
+
+const item = {
+  hidden: { opacity: 0, y: 30 },
+  show: { opacity: 1, y: 0, transition: { duration: 0.6 } },
+}
+
 export default function ShopPage() {
   const [activeCategory, setActiveCategory] = useState("All")
   const [activePriceRange, setActivePriceRange] = useState(null)
@@ -46,7 +59,12 @@ export default function ShopPage() {
   }
 
   return (
-    <main className="min-h-screen bg-background">
+    <motion.main
+      className="min-h-screen bg-background"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      transition={{ duration: 0.6 }}
+    >
       <Navigation />
 
       {/* Hero */}
@@ -62,9 +80,9 @@ export default function ShopPage() {
 
         <motion.div
           className="relative z-10 text-center text-background px-6"
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
+          transition={{ duration: 1 }}
         >
           <h1 className="font-serif text-5xl md:text-7xl mb-6">
             The Collection
@@ -92,8 +110,8 @@ export default function ShopPage() {
             className="text-sm bg-transparent"
           >
             <option value="featured">Featured</option>
-            <option value="price-low">{"Price: Low → High"}</option>
-            <option value="price-high">{"Price: High → Low"}</option>
+            <option value="price-low">Price: Low → High</option>
+            <option value="price-high">Price: High → Low</option>
             <option value="name">Name A-Z</option>
           </select>
         </div>
@@ -101,9 +119,9 @@ export default function ShopPage() {
         <AnimatePresence>
           {showFilters && (
             <motion.div
-              initial={{ height: 0 }}
-              animate={{ height: "auto" }}
-              exit={{ height: 0 }}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
               className="lg:hidden overflow-hidden px-6 pb-6"
             >
               <div className="space-y-4">
@@ -111,7 +129,7 @@ export default function ShopPage() {
                   <button
                     key={cat}
                     onClick={() => setActiveCategory(cat)}
-                    className="block text-left"
+                    className="block text-left text-muted-foreground hover:text-foreground"
                   >
                     {cat}
                   </button>
@@ -123,42 +141,66 @@ export default function ShopPage() {
       </section>
 
       {/* Products */}
-      <section className="py-16 max-w-7xl mx-auto px-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10">
-          {filteredProducts.map((product) => (
-            <Link
-              key={product.id}
-              href={`/product/${product.id}`}
-              className="group"
-            >
-              <div className="relative aspect-[3/4] overflow-hidden bg-muted">
-                <Image
-                  src={product.images?.[0] || product.image || "/placeholder.svg"}
-                  alt={product.name}
-                  fill
-                  className="object-cover group-hover:scale-105 transition"
-                />
-              </div>
-              <h3 className="mt-3 font-serif">{product.name}</h3>
-              <p className="text-sm text-muted-foreground">
-                ${product.price}
-              </p>
-            </Link>
-          ))}
-        </div>
+      <section className="py-20 max-w-7xl mx-auto px-6">
+        <motion.div
+          variants={container}
+          initial="hidden"
+          animate="show"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-10"
+        >
+          <AnimatePresence>
+            {filteredProducts.map((product) => (
+              <motion.div
+                key={product.id}
+                variants={item}
+                layout
+                exit={{ opacity: 0, scale: 0.95 }}
+              >
+                <Link href={`/product/${product.id}`} className="group block">
+                  <div className="relative aspect-[3/4] overflow-hidden bg-muted">
+                    <Image
+                      src={
+                        product.images?.[0] ||
+                        product.image ||
+                        "/placeholder.svg"
+                      }
+                      alt={product.name}
+                      fill
+                      className="object-cover transition duration-700 group-hover:scale-110"
+                    />
+                  </div>
+                  <h3 className="mt-3 font-serif">{product.name}</h3>
+                  <p className="text-sm text-muted-foreground">
+                    ${product.price}
+                  </p>
+                </Link>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
 
         {filteredProducts.length === 0 && (
-          <div className="text-center py-16">
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="text-center py-20"
+          >
             <p>No products found.</p>
             <button onClick={clearFilters} className="underline">
               Clear filters
             </button>
-          </div>
+          </motion.div>
         )}
       </section>
 
       {/* CTA */}
-      <section className="border-t py-20 text-center">
+      <motion.section
+        className="border-t py-20 text-center"
+        initial={{ opacity: 0, y: 40 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true }}
+        transition={{ duration: 0.8 }}
+      >
         <h2 className="font-serif text-3xl mb-6">Made with Purpose</h2>
         <Link
           href="/heritage"
@@ -166,9 +208,9 @@ export default function ShopPage() {
         >
           Discover Our Story <ArrowRight className="w-4 h-4" />
         </Link>
-      </section>
+      </motion.section>
 
       <PremiumFooter />
-    </main>
+    </motion.main>
   )
 }

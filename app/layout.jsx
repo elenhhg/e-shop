@@ -1,5 +1,6 @@
 import { Inter, Cormorant_Garamond } from "next/font/google"
 import { CartProvider } from "@/components/cart-provider"
+import { LoadingScreen } from "@/components/loading"
 import "./globals.css"
 
 const inter = Inter({
@@ -23,6 +24,7 @@ export default function RootLayout({ children }) {
     <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
       <body className="font-sans antialiased bg-amber-900/10 min-h-screen">
         <CartProvider>
+          <LoadingScreen />
           {children}
         </CartProvider>
       </body>

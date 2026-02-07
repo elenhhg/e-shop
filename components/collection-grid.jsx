@@ -5,7 +5,6 @@ import Link from "next/link"
 import { motion } from "framer-motion"
 import { ProductCard } from "./product-cart"
 
-
 export function CollectionGrid() {
   const [products, setProducts] = useState([])
   const [loading, setLoading] = useState(true)
@@ -28,8 +27,9 @@ export function CollectionGrid() {
   }
 
   return (
-    <section className="py-24 lg:py-32 px-6 lg:px-8">
+    <section className="py-24 lg:py-32 px-6 lg:px-8 bg-background">
       <div className="max-w-7xl mx-auto">
+
         {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -79,6 +79,7 @@ export function CollectionGrid() {
             View Full Collection
           </Link>
         </motion.div>
+
       </div>
     </section>
   )

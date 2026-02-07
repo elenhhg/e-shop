@@ -9,7 +9,6 @@ import { MiniCart } from "./mini-cart"
 import { useCart } from "./cart-provider"
 
 export function Navigation() {
-  const [isScrolled, setIsScrolled] = useState(false)
   const [isMenuOpen, setIsMenuOpen] = useState(false)
   const [isCartOpen, setIsCartOpen] = useState(false)
   const [isSearchOpen, setIsSearchOpen] = useState(false)
@@ -18,14 +17,6 @@ export function Navigation() {
   const searchContainerRef = useRef(null)
   const pathname = usePathname()
   const { totalItems } = useCart()
-
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsScrolled(window.scrollY > 50)
-    }
-    window.addEventListener("scroll", handleScroll)
-    return () => window.removeEventListener("scroll", handleScroll)
-  }, [])
 
   useEffect(() => {
     setIsMenuOpen(false)
@@ -64,26 +55,21 @@ export function Navigation() {
     { href: "/heritage", label: "Our Story" },
   ]
 
-  const navItemColor = isScrolled ? "text-foreground" : "text-black/80"
-  const navItemHoverColor = isScrolled ? "text-foreground/60 hover:text-foreground" : "text-black/70 hover:text-black"
-  const iconColor = isScrolled ? "text-foreground" : "text-black/80"
-
   return (
     <>
       <motion.header
         initial={{ y: -100 }}
         animate={{ y: 0 }}
         transition={{ duration: 0.6, ease: "easeOut" }}
-        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-500 ${
-          isScrolled ? "bg-background/80 backdrop-blur-md border-b border-border" : "bg-transparent"
-        }`}
+        className="fixed top-0 left-0 right-0 z-50 bg-background/90 backdrop-blur-md border-b border-border"
       >
         <nav className="mx-auto max-w-7xl px-6 lg:px-8">
           <div className="flex h-16 lg:h-20 items-center justify-between">
+
             {/* Mobile menu button */}
             <button
               onClick={() => setIsMenuOpen(!isMenuOpen)}
-              className={`lg:hidden p-2 -ml-2 transition-colors duration-500 ${iconColor}`}
+              className="lg:hidden p-2 -ml-2 text-foreground"
               aria-label="Toggle menu"
             >
               {isMenuOpen ? <X className="h-5 w-5 stroke-[1.5]" /> : <Menu className="h-5 w-5 stroke-[1.5]" />}
@@ -95,8 +81,10 @@ export function Navigation() {
                 <Link
                   key={link.href}
                   href={link.href}
-                  className={`text-sm tracking-[0.2em] uppercase transition-colors duration-500 ${
-                    pathname === link.href ? navItemColor : navItemHoverColor
+                  className={`text-sm tracking-[0.2em] uppercase transition-colors ${
+                    pathname === link.href
+                      ? "text-foreground"
+                      : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
                   {link.label}
@@ -130,11 +118,7 @@ export function Navigation() {
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
                         placeholder="Search..."
-                        className={`w-full bg-transparent border-b text-sm py-1 pr-2 outline-none transition-colors duration-500 ${
-                          isScrolled
-                            ? "border-foreground/30 text-foreground placeholder:text-foreground/50"
-                            : "border-white/30 text-white placeholder:text-white/50"
-                        }`}
+                        className="w-full bg-transparent border-b border-foreground/30 text-sm py-1 pr-2 outline-none text-foreground placeholder:text-muted-foreground"
                       />
                     </motion.div>
                   )}
@@ -142,7 +126,7 @@ export function Navigation() {
                 <button
                   onClick={() => setIsSearchOpen(!isSearchOpen)}
                   aria-label="Search"
-                  className={`p-2 transition-colors duration-500 ${iconColor}`}
+                  className="p-2 text-foreground"
                 >
                   {isSearchOpen ? <X className="h-5 w-5 stroke-[1.5]" /> : <Search className="h-5 w-5 stroke-[1.5]" />}
                 </button>
@@ -151,7 +135,7 @@ export function Navigation() {
               <Link
                 href="/account/profile"
                 aria-label="Account"
-                className={`p-2 hidden sm:block transition-colors duration-500 ${iconColor}`}
+                className="p-2 hidden sm:block text-foreground"
               >
                 <User className="h-5 w-5 stroke-[1.5]" />
               </Link>
@@ -159,15 +143,11 @@ export function Navigation() {
               <button
                 onClick={() => setIsCartOpen(true)}
                 aria-label="Shopping cart"
-                className={`p-2 -mr-2 relative transition-colors duration-500 ${iconColor}`}
+                className="p-2 -mr-2 relative text-foreground"
               >
                 <ShoppingBag className="h-5 w-5 stroke-[1.5]" />
                 {totalItems > 0 && (
-                  <span
-                    className={`absolute -top-1 -right-1 h-4 w-4 text-[10px] flex items-center justify-center transition-colors duration-500 ${
-                      isScrolled ? "bg-foreground text-background" : "bg-white text-foreground"
-                    }`}
-                  >
+                  <span className="absolute -top-1 -right-1 h-4 w-4 text-[10px] flex items-center justify-center bg-foreground text-background">
                     {totalItems}
                   </span>
                 )}
@@ -186,7 +166,7 @@ export function Navigation() {
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.3 }}
-              className="fixed inset-0 bg-foreground/20 z-40 lg:hidden"
+              className="fixed inset-0 bg-background/80 backdrop-blur-sm z-40 lg:hidden"
               onClick={() => setIsMenuOpen(false)}
             />
             <motion.div
@@ -197,8 +177,8 @@ export function Navigation() {
               className="fixed inset-y-0 left-0 w-[280px] z-50 bg-background border-r border-border lg:hidden"
             >
               <div className="flex items-center justify-between h-16 px-6 border-b border-border">
-                <span className="font-serif text-lg tracking-[0.2em] uppercase">Menu</span>
-                <button onClick={() => setIsMenuOpen(false)} className="p-2 -mr-2" aria-label="Close menu">
+                <span className="font-serif text-lg tracking-[0.2em] uppercase text-foreground">Menu</span>
+                <button onClick={() => setIsMenuOpen(false)} className="p-2 -mr-2 text-foreground">
                   <X className="h-5 w-5 stroke-[1.5]" />
                 </button>
               </div>
@@ -208,7 +188,9 @@ export function Navigation() {
                     key={link.href}
                     href={link.href}
                     className={`text-lg tracking-[0.15em] uppercase transition-colors ${
-                      pathname === link.href ? "text-foreground" : "text-foreground/60 hover:text-foreground"
+                      pathname === link.href
+                        ? "text-foreground"
+                        : "text-muted-foreground hover:text-foreground"
                     }`}
                   >
                     {link.label}

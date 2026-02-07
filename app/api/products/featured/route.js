@@ -9,16 +9,13 @@ export async function GET() {
     console.log("[v0] DB:", Product.db?.name)
     console.log("[v0] Collection:", Product.collection.name)
 
-    // First, let's check ALL products to debug
     const allProducts = await Product.find({}).lean()
     console.log("[v0] Total products in collection:", allProducts.length)
     console.log("[v0] Sample product:", allProducts[0])
 
-    // Now get featured products
     const products = await Product.find({ featured: true }).lean()
     console.log("[v0] Found featured products:", products.length)
 
-    // If no featured products, return all products for debugging
     if (products.length === 0 && allProducts.length > 0) {
       console.log("[v0] No featured products found, returning all products")
       return NextResponse.json(allProducts)
