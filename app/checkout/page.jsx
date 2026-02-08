@@ -3,8 +3,7 @@
 import { useState } from "react"
 import Image from "next/image"
 import Link from "next/link"
-import { Lock, CreditCard, Truck, ArrowLeft, Trash2 } from "lucide-react"
-
+import { Lock, CreditCard, Truck, ArrowLeft, Trash2, Loader2 } from "lucide-react"
 import { Navigation } from "@/components/navigation"
 import { PremiumFooter } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -13,6 +12,7 @@ import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Separator } from "@/components/ui/separator"
 import { useCart } from "@/components/cart-provider"
+import { toast } from "sonner"
 
 export default function CheckoutPage() {
   const { items, totalPrice, removeItem, clearCart } = useCart()
@@ -27,12 +27,54 @@ export default function CheckoutPage() {
     e.preventDefault()
     setIsProcessing(true)
     
-    // Simulate payment processing
-    await new Promise((resolve) => setTimeout(resolve, 2000))
-    
-    alert("Order placed successfully!")
-    clearCart()
-    setIsProcessing(false)
+    try {
+      const formData = new FormData(e.target)
+      const data = Object.fromEntries(formData.entries())
+      
+      // Create order data
+      const orderData = {
+        items,
+        total,
+        shippingAddress: {
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          phone: data.phone,
+          street: data.address,
+          city: data.city,
+          state: data.state,
+          zip: data.zip,
+          country: "United States"
+        },
+        paymentMethod
+      }
+
+      // Send order to API
+      const response = await fetch("/api/orders", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(orderData)
+      })
+
+      const result = await response.json()
+
+      if (!response.ok) {
+        throw new Error(result.error || "Failed to place order")
+      }
+
+      toast.success("Order placed successfully!")
+      clearCart()
+      // Redirect to order confirmation
+      window.location.href = `/account/orders/${result.orderId}`
+      
+    } catch (error) {
+      console.error("Checkout error:", error)
+      toast.error(error.message || "Failed to place order")
+    } finally {
+      setIsProcessing(false)
+    }
   }
 
   if (items.length === 0) {
@@ -63,14 +105,14 @@ export default function CheckoutPage() {
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           {/* Back link */}
           <Link 
-            href="/shop" 
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
+            href="/cart" 
+            className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors mb-8"
           >
             <ArrowLeft className="h-4 w-4" />
-            Continue Shopping
+            Back to Cart
           </Link>
 
-          <h1 className="text-3xl lg:text-4xl font-light tracking-tight mb-12">
+          <h1 className="text-3xl lg:text-4xl font-serif mb-12">
             Checkout
           </h1>
 
@@ -80,168 +122,150 @@ export default function CheckoutPage() {
               <div className="lg:col-span-2 space-y-12">
                 {/* Contact Information */}
                 <section>
-                  <h2 className="text-xl font-light mb-6">
+                  <h2 className="text-xl font-semibold mb-6">
                     Contact Information
                   </h2>
 
                   <div className="grid gap-4">
                     <div className="grid sm:grid-cols-2 gap-4">
                       <div>
-                        <Label
-                          htmlFor="firstName"
-                          className="text-sm text-muted-foreground"
-                        >
+                        <Label htmlFor="firstName">
                           First Name
                         </Label>
                         <Input
                           id="firstName"
+                          name="firstName"
                           required
                           placeholder="First name"
-                          className="mt-2 h-12 border-border"
+                          className="mt-2"
                         />
                       </div>
 
                       <div>
-                        <Label
-                          htmlFor="lastName"
-                          className="text-sm text-muted-foreground"
-                        >
+                        <Label htmlFor="lastName">
                           Last Name
                         </Label>
                         <Input
                           id="lastName"
+                          name="lastName"
                           required
                           placeholder="Last name"
-                          className="mt-2 h-12 border-border"
+                          className="mt-2"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <Label
-                        htmlFor="email"
-                        className="text-sm text-muted-foreground"
-                      >
+                      <Label htmlFor="email">
                         Email
                       </Label>
                       <Input
                         id="email"
+                        name="email"
                         type="email"
                         required
                         placeholder="Email address"
-                        className="mt-2 h-12 border-border"
+                        className="mt-2"
                       />
                     </div>
 
                     <div>
-                      <Label
-                        htmlFor="phone"
-                        className="text-sm text-muted-foreground"
-                      >
+                      <Label htmlFor="phone">
                         Phone
                       </Label>
                       <Input
                         id="phone"
+                        name="phone"
                         type="tel"
                         placeholder="Phone number"
-                        className="mt-2 h-12 border-border"
+                        className="mt-2"
                       />
                     </div>
                   </div>
                 </section>
 
-                <Separator className="bg-border" />
+                <Separator />
 
                 {/* Shipping Address */}
                 <section>
-                  <h2 className="text-xl font-light mb-6">
+                  <h2 className="text-xl font-semibold mb-6">
                     Shipping Address
                   </h2>
 
                   <div className="grid gap-4">
                     <div>
-                      <Label
-                        htmlFor="address"
-                        className="text-sm text-muted-foreground"
-                      >
+                      <Label htmlFor="address">
                         Street Address
                       </Label>
                       <Input
                         id="address"
+                        name="address"
                         required
                         placeholder="Street address"
-                        className="mt-2 h-12 border-border"
+                        className="mt-2"
                       />
                     </div>
 
                     <div>
-                      <Label
-                        htmlFor="apartment"
-                        className="text-sm text-muted-foreground"
-                      >
+                      <Label htmlFor="apartment">
                         Apartment, Suite, etc. (optional)
                       </Label>
                       <Input
                         id="apartment"
+                        name="apartment"
                         placeholder="Apartment, suite, etc."
-                        className="mt-2 h-12 border-border"
+                        className="mt-2"
                       />
                     </div>
 
                     <div className="grid sm:grid-cols-3 gap-4">
                       <div>
-                        <Label
-                          htmlFor="city"
-                          className="text-sm text-muted-foreground"
-                        >
+                        <Label htmlFor="city">
                           City
                         </Label>
                         <Input
                           id="city"
+                          name="city"
                           required
                           placeholder="City"
-                          className="mt-2 h-12 border-border"
+                          className="mt-2"
                         />
                       </div>
 
                       <div>
-                        <Label
-                          htmlFor="state"
-                          className="text-sm text-muted-foreground"
-                        >
+                        <Label htmlFor="state">
                           State
                         </Label>
                         <Input
                           id="state"
+                          name="state"
                           required
                           placeholder="State"
-                          className="mt-2 h-12 border-border"
+                          className="mt-2"
                         />
                       </div>
 
                       <div>
-                        <Label
-                          htmlFor="zip"
-                          className="text-sm text-muted-foreground"
-                        >
+                        <Label htmlFor="zip">
                           ZIP Code
                         </Label>
                         <Input
                           id="zip"
+                          name="zip"
                           required
                           placeholder="ZIP"
-                          className="mt-2 h-12 border-border"
+                          className="mt-2"
                         />
                       </div>
                     </div>
                   </div>
                 </section>
 
-                <Separator className="bg-border" />
+                <Separator />
 
                 {/* Payment Method */}
                 <section>
-                  <h2 className="text-xl font-light mb-6">
+                  <h2 className="text-xl font-semibold mb-6">
                     Payment Method
                   </h2>
 
@@ -251,10 +275,10 @@ export default function CheckoutPage() {
                     className="space-y-4"
                   >
                     <div
-                      className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
+                      className={`flex items-center gap-4 p-4 border rounded-lg cursor-pointer ${
                         paymentMethod === "card"
-                          ? "border-foreground"
-                          : "border-border"
+                          ? "border-black"
+                          : "border-gray-200"
                       }`}
                     >
                       <RadioGroupItem value="card" id="card" />
@@ -268,10 +292,10 @@ export default function CheckoutPage() {
                     </div>
 
                     <div
-                      className={`flex items-center gap-4 p-4 border cursor-pointer transition-colors ${
+                      className={`flex items-center gap-4 p-4 border rounded-lg cursor-pointer ${
                         paymentMethod === "paypal"
-                          ? "border-foreground"
-                          : "border-border"
+                          ? "border-black"
+                          : "border-gray-200"
                       }`}
                     >
                       <RadioGroupItem value="paypal" id="paypal" />
@@ -287,48 +311,39 @@ export default function CheckoutPage() {
                   {paymentMethod === "card" && (
                     <div className="mt-6 space-y-4">
                       <div>
-                        <Label
-                          htmlFor="cardNumber"
-                          className="text-sm text-muted-foreground"
-                        >
+                        <Label htmlFor="cardNumber">
                           Card Number
                         </Label>
                         <Input
                           id="cardNumber"
                           required
                           placeholder="1234 5678 9012 3456"
-                          className="mt-2 h-12 border-border"
+                          className="mt-2"
                         />
                       </div>
 
                       <div className="grid sm:grid-cols-2 gap-4">
                         <div>
-                          <Label
-                            htmlFor="expiry"
-                            className="text-sm text-muted-foreground"
-                          >
+                          <Label htmlFor="expiry">
                             Expiry Date
                           </Label>
                           <Input
                             id="expiry"
                             required
                             placeholder="MM / YY"
-                            className="mt-2 h-12 border-border"
+                            className="mt-2"
                           />
                         </div>
 
                         <div>
-                          <Label
-                            htmlFor="cvv"
-                            className="text-sm text-muted-foreground"
-                          >
+                          <Label htmlFor="cvv">
                             CVV
                           </Label>
                           <Input
                             id="cvv"
                             required
                             placeholder="123"
-                            className="mt-2 h-12 border-border"
+                            className="mt-2"
                           />
                         </div>
                       </div>
@@ -339,15 +354,15 @@ export default function CheckoutPage() {
 
               {/* Order Summary */}
               <div className="lg:col-span-1">
-                <div className="bg-secondary p-8 sticky top-24">
-                  <h2 className="text-xl font-light mb-6">
+                <div className="bg-gray-50 p-8 rounded-lg sticky top-24">
+                  <h2 className="text-xl font-semibold mb-6">
                     Order Summary
                   </h2>
 
                   <div className="space-y-6 mb-8">
                     {items.map((item) => (
-                      <div key={`${item.product._id || item.product.id}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-4">
-                        <div className="relative w-20 h-20 bg-muted overflow-hidden flex-shrink-0">
+                      <div key={`${item.product._id}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-4">
+                        <div className="relative w-20 h-20 bg-gray-200 overflow-hidden flex-shrink-0">
                           <Image
                             src={item.product.image || "/placeholder.svg"}
                             alt={item.product.name}
@@ -361,28 +376,28 @@ export default function CheckoutPage() {
                             {item.product.name}
                           </h3>
                           {(item.selectedColor || item.selectedSize) && (
-                            <p className="text-xs text-muted-foreground mt-1">
+                            <p className="text-xs text-gray-500 mt-1">
                               {item.selectedColor && item.selectedColor}
                               {item.selectedColor && item.selectedSize && " / "}
                               {item.selectedSize && item.selectedSize}
                             </p>
                           )}
-                          <p className="text-xs text-muted-foreground mt-1">
+                          <p className="text-xs text-gray-500 mt-1">
                             Qty: {item.quantity}
                           </p>
                           <p className="text-sm mt-2">
-                            ${(item.product.price * item.quantity).toLocaleString()}
+                            ${(item.product.price * item.quantity).toFixed(2)}
                           </p>
                         </div>
 
                         <button
                           type="button"
                           onClick={() => removeItem(
-                            item.product._id || item.product.id,
+                            item.product._id,
                             item.selectedSize,
                             item.selectedColor
                           )}
-                          className="text-muted-foreground hover:text-foreground transition-colors"
+                          className="text-gray-400 hover:text-black transition-colors"
                         >
                           <Trash2 className="h-4 w-4" />
                         </button>
@@ -390,38 +405,36 @@ export default function CheckoutPage() {
                     ))}
                   </div>
 
-                  <Separator className="bg-border mb-6" />
+                  <Separator className="mb-6" />
 
                   <div className="space-y-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">
+                      <span className="text-gray-600">
                         Subtotal
                       </span>
                       <span>${totalPrice.toFixed(2)}</span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">
+                      <span className="text-gray-600">
                         Shipping
                       </span>
-                      <span>
-                        {shipping === 0
-                          ? "Complimentary"
-                          : `$${shipping.toFixed(2)}`}
+                      <span className="text-green-600">
+                        Free
                       </span>
                     </div>
 
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">
+                      <span className="text-gray-600">
                         Tax
                       </span>
                       <span>${tax.toFixed(2)}</span>
                     </div>
                   </div>
 
-                  <Separator className="bg-border my-6" />
+                  <Separator className="my-6" />
 
-                  <div className="flex justify-between text-lg mb-8">
+                  <div className="flex justify-between text-lg font-semibold mb-8">
                     <span>Total</span>
                     <span>${total.toFixed(2)}</span>
                   </div>
@@ -429,17 +442,24 @@ export default function CheckoutPage() {
                   <Button 
                     type="submit"
                     disabled={isProcessing}
-                    className="w-full h-14 text-sm tracking-widest uppercase bg-foreground text-background hover:bg-foreground/90"
+                    className="w-full h-12 bg-black text-white hover:bg-gray-800"
                   >
-                    {isProcessing ? "Processing..." : "Complete Order"}
+                    {isProcessing ? (
+                      <>
+                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Place Order"
+                    )}
                   </Button>
 
-                  <div className="flex justify-center gap-6 mt-8 text-muted-foreground">
-                    <div className="flex items-center gap-2 text-xs">
+                  <div className="flex justify-center gap-6 mt-8 text-gray-500 text-sm">
+                    <div className="flex items-center gap-2">
                       <Lock className="h-4 w-4" />
                       Secure
                     </div>
-                    <div className="flex items-center gap-2 text-xs">
+                    <div className="flex items-center gap-2">
                       <Truck className="h-4 w-4" />
                       Free Shipping
                     </div>

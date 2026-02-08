@@ -2,57 +2,44 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { User, Package, MapPin, Settings, LogOut } from "lucide-react"
-import { motion } from "framer-motion"
+import { User, Package, MapPin, Bell, CreditCard, LayoutDashboard } from "lucide-react"
 
-const accountLinks = [
+const menuItems = [
+  { href: "/account", label: "Dashboard", icon: LayoutDashboard },
   { href: "/account/profile", label: "Profile", icon: User },
-  { href: "/account/orders", label: "My Orders", icon: Package },
+  { href: "/account/orders", label: "Orders", icon: Package },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
-  { href: "/account/settings", label: "Settings", icon: Settings },
+  { href: "/account/notifications", label: "Notifications", icon: Bell },
+  { href: "/account/payment", label: "Payment Methods", icon: CreditCard },
 ]
 
 export default function AccountSidebar() {
   const pathname = usePathname()
 
   return (
-    <aside className="w-full lg:w-64 flex-shrink-0">
+    <div className="w-64">
       <nav className="space-y-1">
-        {accountLinks.map((link) => {
-          const isActive = pathname === link.href
-          const Icon = link.icon
-
+        {menuItems.map((item) => {
+          const Icon = item.icon
+          const isActive = pathname === item.href || 
+            (item.href === "/account" && pathname.startsWith("/account/") && pathname !== "/account")
+          
           return (
             <Link
-              key={link.href}
-              href={link.href}
-              className={`flex items-center gap-3 px-4 py-3 text-sm tracking-wide transition-colors relative ${
+              key={item.href}
+              href={item.href}
+              className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-colors ${
                 isActive
-                  ? "text-foreground bg-muted"
-                  : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                  ? "bg-black text-white"
+                  : "hover:bg-gray-100"
               }`}
             >
-              {isActive && (
-                <motion.div
-                  layoutId="account-sidebar-indicator"
-                  className="absolute left-0 top-0 bottom-0 w-0.5 bg-foreground"
-                  transition={{ duration: 0.2 }}
-                />
-              )}
-              <Icon className="h-4 w-4 stroke-[1.5]" />
-              {link.label}
+              <Icon className="h-5 w-5" />
+              <span>{item.label}</span>
             </Link>
           )
         })}
-
-        <button
-          type="button"
-          className="flex items-center gap-3 px-4 py-3 text-sm tracking-wide text-muted-foreground hover:text-foreground transition-colors w-full"
-        >
-          <LogOut className="h-4 w-4 stroke-[1.5]" />
-          Sign Out
-        </button>
       </nav>
-    </aside>
+    </div>
   )
 }

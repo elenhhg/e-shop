@@ -1,137 +1,332 @@
 "use client"
 
-import { useState } from "react"
-import { motion } from "framer-motion"
-import { Plus, MapPin, Edit2, Trash2 } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Plus, Edit2, Trash2, Loader2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import { Navigation } from "@/components/navigation"
 import { PremiumFooter } from "@/components/footer"
 import AccountSidebar from "@/components/account-sidebar"
-const addresses = [
-  {
-    id: "1",
-    label: "Home",
-    default: true,
-    name: "Alexandra Sinclair",
-    street: "245 Park Avenue, Apt 42B",
-    city: "New York",
-    state: "NY",
-    zip: "10167",
-    country: "United States",
-    phone: "+1 (555) 123-4567",
-  },
-  {
-    id: "2",
-    label: "Office",
-    default: false,
-    name: "Alexandra Sinclair",
-    street: "1 World Trade Center, 85th Floor",
-    city: "New York",
-    state: "NY",
-    zip: "10007",
-    country: "United States",
-    phone: "+1 (555) 987-6543",
-  },
-]
+import useSWR from "swr"
+import { toast } from "sonner"
+import { useUser } from "@clerk/nextjs"
+
+const fetcher = async (url) => {
+  const response = await fetch(url, {
+    headers: {
+      'Content-Type': 'application/json',
+    }
+  })
+  
+  if (!response.ok) {
+    const error = new Error('An error occurred while fetching the data.')
+    error.info = await response.json()
+    error.status = response.status
+    throw error
+  }
+  
+  return response.json()
+}
+
+const emptyAddress = {
+  label: "",
+  isDefault: false,
+  name: "",
+  street: "",
+  city: "",
+  state: "",
+  zip: "",
+  country: "United States",
+  phone: "",
+}
 
 export default function AddressesPage() {
-  const [selectedAddress, setSelectedAddress] = useState(null)
+  const { isLoaded, isSignedIn, user } = useUser()
+  const { data: addresses, isLoading, error, mutate } = useSWR(
+    isLoaded && isSignedIn ? "/api/account/addresses" : null,
+    fetcher,
+    {
+      onError: (err) => {
+        console.error("SWR error:", err)
+        if (err.status === 401) {
+          toast.error("Please sign in again")
+        }
+      }
+    }
+  )
+
+  const [showForm, setShowForm] = useState(false)
+  const [editAddress, setEditAddress] = useState(null)
+  const [saving, setSaving] = useState(false)
+
+  // Open modal to add new address
+  function openAddForm() {
+    setEditAddress({ ...emptyAddress })
+    setShowForm(true)
+  }
+
+  // Open modal to edit existing address
+  function openEditForm(address) {
+    setEditAddress({ ...address })
+    setShowForm(true)
+  }
+
+  function closeForm() {
+    setShowForm(false)
+    setEditAddress(null)
+  }
+
+  // Handle add/edit form submit
+  async function handleSubmit(e) {
+    e.preventDefault()
+    if (!editAddress) return
+
+    setSaving(true)
+    const isEditing = !!editAddress._id
+
+    try {
+      console.log("Submitting address:", editAddress)
+      
+      const res = await fetch("/api/account/addresses", {
+        method: isEditing ? "PUT" : "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(editAddress),
+      })
+
+      const data = await res.json()
+      console.log("Server response:", data)
+
+      if (!res.ok) {
+        toast.error(data.error || "Failed to save address")
+        return
+      }
+
+      await mutate()
+      closeForm()
+      toast.success(isEditing ? "Address updated" : "Address added")
+    } catch (err) {
+      console.error("Error:", err)
+      toast.error("Something went wrong. Please try again.")
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  // Delete an address
+  async function handleDelete(id) {
+    if (!confirm("Are you sure you want to delete this address?")) {
+      return
+    }
+
+    try {
+      const res = await fetch(`/api/account/addresses?id=${id}`, {
+        method: "DELETE",
+        headers: {
+          "Accept": "application/json"
+        },
+      })
+
+      const data = await res.json()
+      if (!res.ok) {
+        toast.error(data.error || "Failed to delete address")
+        return
+      }
+
+      await mutate()
+      toast.success("Address removed")
+    } catch (err) {
+      console.error(err)
+      toast.error("Something went wrong")
+    }
+  }
+
+  // If user is not loaded
+  if (!isLoaded) {
+    return (
+      <>
+        <Navigation />
+        <main className="min-h-screen pt-24 flex justify-center items-center">
+          <Loader2 className="animate-spin h-8 w-8" />
+        </main>
+        <PremiumFooter />
+      </>
+    )
+  }
+
+  if (!isSignedIn) {
+    return (
+      <>
+        <Navigation />
+        <main className="min-h-screen pt-24">
+          <div className="max-w-7xl mx-auto px-6">
+            <h2 className="text-2xl mb-4">You must be signed in</h2>
+            <p>Please sign in to view your addresses.</p>
+          </div>
+        </main>
+        <PremiumFooter />
+      </>
+    )
+  }
 
   return (
     <>
       <Navigation />
 
-      <main className="min-h-screen bg-background pt-24 lg:pt-32">
-        <div className="mx-auto max-w-7xl px-6 lg:px-8 pb-20">
-          {/* Page header */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
-            className="mb-12"
-          >
-            <h1 className="font-serif text-3xl lg:text-4xl mb-2">My Account</h1>
-            <p className="text-muted-foreground">
-              Manage your shipping addresses
-            </p>
-          </motion.div>
+      <main className="min-h-screen pt-24">
+        <div className="max-w-7xl mx-auto px-6 flex gap-12">
+          <AccountSidebar />
 
-          <div className="flex flex-col lg:flex-row gap-12">
-            <AccountSidebar />
+          <div className="flex-1">
+            <div className="flex justify-between mb-6">
+              <h2 className="text-2xl">Saved Addresses</h2>
+              <Button onClick={openAddForm}>
+                <Plus className="h-4 w-4 mr-2" />
+                Add New
+              </Button>
+            </div>
 
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.1 }}
-              className="flex-1"
-            >
-              <div className="flex items-center justify-between mb-8">
-                <h2 className="font-serif text-2xl">Saved Addresses</h2>
-                <Button
-                  variant="outline"
-                  className="gap-2 text-sm tracking-[0.1em] uppercase bg-transparent"
-                >
-                  <Plus className="h-4 w-4" />
-                  Add New
-                </Button>
+            {isLoading ? (
+              <div className="flex justify-center">
+                <Loader2 className="animate-spin h-8 w-8" />
               </div>
-
+            ) : error ? (
+              <div className="text-red-500">
+                Error loading addresses: {error.message}
+              </div>
+            ) : !addresses || addresses.length === 0 ? (
+              <p className="text-gray-500">You have no saved addresses</p>
+            ) : (
               <div className="grid sm:grid-cols-2 gap-6">
-                {addresses.map((address, index) => (
-                  <motion.div
-                    key={address.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className={`relative border p-6 transition-colors cursor-pointer ${
-                      selectedAddress === address.id || address.default
-                        ? "border-foreground"
-                        : "border-border hover:border-foreground/50"
-                    }`}
-                    onClick={() => setSelectedAddress(address.id)}
-                  >
-                    {address.default && (
-                      <span className="absolute top-4 right-4 text-[10px] tracking-[0.15em] uppercase text-muted-foreground">
-                        Default
-                      </span>
-                    )}
-
-                    <div className="flex items-start gap-3 mb-4">
-                      <MapPin className="h-4 w-4 mt-0.5 text-muted-foreground" />
-                      <span className="text-sm font-medium">
-                        {address.label}
-                      </span>
-                    </div>
-
-                    <div className="text-sm text-muted-foreground space-y-1 ml-7">
-                      <p>{address.name}</p>
-                      <p>{address.street}</p>
-                      <p>
-                        {address.city}, {address.state} {address.zip}
-                      </p>
-                      <p>{address.country}</p>
-                      <p className="pt-2">{address.phone}</p>
-                    </div>
-
-                    <div className="flex gap-4 mt-6 ml-7">
-                      <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground transition-colors">
-                        <Edit2 className="h-3 w-3" />
-                        Edit
-                      </button>
-
-                      {!address.default && (
-                        <button className="flex items-center gap-1.5 text-xs text-muted-foreground hover:text-red-600 transition-colors">
-                          <Trash2 className="h-3 w-3" />
-                          Remove
-                        </button>
+                {addresses.map((a) => (
+                  <div key={a._id} className="border p-4 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <p className="font-medium">{a.label}</p>
+                      {a.isDefault && (
+                        <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                          Default
+                        </span>
                       )}
                     </div>
-                  </motion.div>
+                    <p className="text-sm mb-2">{a.name}</p>
+                    <p className="text-sm mb-2">{a.street}</p>
+                    <p className="text-sm mb-2">{a.city}, {a.state} {a.zip}</p>
+                    <p className="text-sm mb-2">{a.country}</p>
+                    {a.phone && <p className="text-sm mb-2">📞 {a.phone}</p>}
+
+                    <div className="flex gap-3 mt-4">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => openEditForm(a)}
+                      >
+                        <Edit2 className="h-4 w-4 mr-1" />
+                        Edit
+                      </Button>
+                      {!a.isDefault && (
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(a._id)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      )}
+                    </div>
+                  </div>
                 ))}
               </div>
-            </motion.div>
+            )}
           </div>
         </div>
+
+        {/* ✅ FORM MODAL */}
+        {showForm && editAddress && (
+          <div className="fixed inset-0 bg-black/40 z-50 flex items-center justify-center p-4">
+            <div className="bg-background p-6 w-full max-w-md relative rounded-lg">
+              <button
+                onClick={closeForm}
+                className="absolute top-4 right-4"
+              >
+                <X />
+              </button>
+
+              <h3 className="text-xl mb-4">
+                {editAddress._id ? "Edit Address" : "Add Address"}
+              </h3>
+
+              <form onSubmit={handleSubmit} className="space-y-3">
+                {[
+                  ["Label", "label"],
+                  ["Full Name", "name"],
+                  ["Street", "street"],
+                  ["City", "city"],
+                  ["State", "state"],
+                  ["ZIP", "zip"],
+                  ["Country", "country"],
+                  ["Phone", "phone"],
+                ].map(([label, key]) => (
+                  <div key={key}>
+                    <Label>{label}</Label>
+                    <Input
+                      required={key !== "phone"}
+                      value={editAddress[key]}
+                      onChange={(e) =>
+                        setEditAddress({
+                          ...editAddress,
+                          [key]: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                ))}
+
+                <div className="flex items-center space-x-2 pt-2">
+                  <input
+                    type="checkbox"
+                    id="isDefault"
+                    checked={editAddress.isDefault}
+                    onChange={(e) =>
+                      setEditAddress({
+                        ...editAddress,
+                        isDefault: e.target.checked,
+                      })
+                    }
+                    className="h-4 w-4"
+                  />
+                  <Label htmlFor="isDefault">
+                    Set as default address
+                  </Label>
+                </div>
+
+                <div className="flex gap-2 pt-4">
+                  <Button
+                    type="submit"
+                    disabled={saving}
+                    className="flex-1"
+                  >
+                    {saving && (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    )}
+                    Save
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={closeForm}
+                    disabled={saving}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
       </main>
 
       <PremiumFooter />
