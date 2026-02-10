@@ -1,3 +1,4 @@
+// app/layout.jsx - ΔΙΟΡΘΩΜΕΝΟ
 import { Inter, Cormorant_Garamond } from "next/font/google"
 import { CartProvider } from "@/components/cart-provider"
 import { LoadingScreen } from "@/components/loading"
@@ -22,14 +23,21 @@ export const metadata = {
 
 export default function RootLayout({ children }) {
   return (
-      <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
-        <body className="font-sans antialiased bg-amber-900/10 min-h-screen">
+    <html lang="en" className={`${inter.variable} ${cormorant.variable}`}>
+      <head>
+        <style>{`
+          body {
+            background-color: #fbefe2 !important;
+          }
+        `}</style>
+      </head>
+      <body className="font-sans antialiased min-h-screen">
+        <ClerkProvider>
           <CartProvider>
             <LoadingScreen />
-          <ClerkProvider>
             {children}
-          </ClerkProvider>
-        </CartProvider>
+          </CartProvider>
+        </ClerkProvider>
       </body>
     </html>
   )

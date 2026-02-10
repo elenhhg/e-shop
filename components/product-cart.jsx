@@ -16,7 +16,7 @@ export function ProductCard({
   hoverImage,
   category,
   index,
-  product, // Accept full product object for cart
+  product,
   sizes = [],
   colors = [],
   inStock = true
@@ -29,35 +29,135 @@ export function ProductCard({
   
   const { addItem } = useCart()
 
+  // Helper function to get color value safely
+  const getColorValue = (color) => {
+    if (typeof color === 'string') return color
+    if (typeof color === 'object' && color !== null) {
+      return color.hex || color.value || '#cccccc'
+    }
+    return '#cccccc'
+  }
+
+  // Helper function to get color display name
+  const getColorName = (color) => {
+    if (typeof color === 'string') return color
+    if (typeof color === 'object' && color !== null) {
+      return color.name || 'Color'
+    }
+    return 'Color'
+  }
+
+  // Helper function to check if color is available
+  const isColorAvailable = (color) => {
+    if (typeof color === 'object' && color !== null) {
+      return color.available !== false
+    }
+    return true
+  }
+
+  // Helper function to get size string
+  const getSizeString = (size) => {
+    if (typeof size === 'string') return size
+    if (typeof size === 'object' && size !== null) {
+      return size.size || size.name || 'Size'
+    }
+    return 'Size'
+  }
+
+  // Helper function to check if size is available
+  const isSizeAvailable = (size) => {
+    if (typeof size === 'object' && size !== null) {
+      return size.available !== false
+    }
+    return true
+  }
+
+  // Normalize colors array
+  const normalizedColors = Array.isArray(colors) 
+    ? colors.filter(color => color && isColorAvailable(color)).map(color => ({
+        value: getColorValue(color),
+        name: getColorName(color),
+        original: color,
+        available: isColorAvailable(color)
+      }))
+    : []
+
+  // Normalize sizes array
+  const normalizedSizes = Array.isArray(sizes) 
+    ? sizes.filter(size => size && isSizeAvailable(size)).map(size => ({
+        label: getSizeString(size),
+        original: size,
+        available: isSizeAvailable(size)
+      }))
+    : []
+
   const handleAddToCart = async (e) => {
     e.preventDefault()
     e.stopPropagation()
     
     if (!inStock) return
     
+    // Validate required selections
+    if (normalizedSizes.length > 0 && !selectedSize) {
+      alert("Please select a size")
+      return
+    }
+    
+    if (normalizedColors.length > 0 && !selectedColor) {
+      alert("Please select a color")
+      return
+    }
+    
     setIsAddingToCart(true)
     
     try {
+      // Create product object with all necessary data
+      const productData = {
+        _id: product?.id || slug,
+        id: product?.id || slug,
+        name,
+        price: typeof price === 'number' ? price : parseFloat(price),
+        image: image || "/placeholder.svg",
+        category,
+        slug
+      }
+      
       // Add to cart with selected options
       addItem(
-        {
-          _id: product?._id || slug,
-          id: product?._id || slug,
-          name,
-          price: typeof price === 'number' ? price : parseFloat(price),
-          image,
-          category
-        },
-        1,
-        selectedSize,
-        selectedColor
+        productData, 
+        1, 
+        selectedSize ? getSizeString(selectedSize) : null,
+        selectedColor ? getColorName(selectedColor) : null
       )
+      
     } catch (error) {
       console.error("Error adding to cart:", error)
+      alert("Failed to add item to cart. Please try again.")
     } finally {
       setIsAddingToCart(false)
     }
   }
+
+  // Handle size selection
+  const handleSizeSelect = (size, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!isSizeAvailable(size.original)) return
+    setSelectedSize(selectedSize?.label === size.label ? null : size)
+  }
+
+  // Handle color selection
+  const handleColorSelect = (color, e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    if (!color.available) return
+    setSelectedColor(selectedColor?.name === color.name ? null : color)
+  }
+
+  // Check if product is in stock
+  const isProductInStock = inStock && 
+    (normalizedColors.length === 0 || normalizedColors.some(color => color.available)) &&
+    (normalizedSizes.length === 0 || normalizedSizes.some(size => size.available))
 
   return (
     <motion.div
@@ -78,6 +178,12 @@ export function ProductCard({
       <Link
         href={`/product/${slug}`}
         className="block"
+        onClick={(e) => {
+          // Prevent navigation if clicking on buttons
+          if (e.target.closest('button') || e.target.closest('.add-to-cart-btn')) {
+            e.preventDefault()
+          }
+        }}
       >
         <div className="relative aspect-[3/4] overflow-hidden bg-gray-100 mb-4">
           {/* Primary image */}
@@ -114,20 +220,25 @@ export function ProductCard({
           <motion.div
             initial={{ opacity: 0, y: 10 }}
             animate={{ 
-              opacity: isHovered && inStock ? 1 : 0,
-              y: isHovered && inStock ? 0 : 10
+              opacity: isHovered && isProductInStock ? 1 : 0,
+              y: isHovered && isProductInStock ? 0 : 10
             }}
             transition={{ duration: 0.3 }}
             className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-10"
-            onClick={(e) => e.preventDefault()} // Prevent link navigation
           >
             <Button
               onClick={handleAddToCart}
-              disabled={!inStock || isAddingToCart}
-              className="bg-black text-white hover:bg-gray-800 px-6 py-2 rounded-full text-sm font-medium shadow-lg"
+              disabled={!isProductInStock || isAddingToCart}
+              className="add-to-cart-btn bg-black text-white hover:bg-gray-800 px-6 py-2 rounded-full text-sm font-medium shadow-lg min-w-[140px] transition-all duration-300"
             >
               {isAddingToCart ? (
-                "Adding..."
+                <span className="flex items-center justify-center">
+                  <svg className="animate-spin h-4 w-4 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  </svg>
+                  Adding...
+                </span>
               ) : (
                 <>
                   <ShoppingBag className="h-4 w-4 mr-2" />
@@ -138,7 +249,7 @@ export function ProductCard({
           </motion.div>
 
           {/* Out of stock badge */}
-          {!inStock && (
+          {!isProductInStock && (
             <div className="absolute inset-0 bg-black/40 flex items-center justify-center">
               <span className="text-white text-sm font-medium px-3 py-1 bg-black/70">
                 Out of Stock
@@ -165,7 +276,7 @@ export function ProductCard({
         </div>
 
         {/* Size selector (visible on hover) */}
-        {sizes.length > 0 && (
+        {normalizedSizes.length > 0 && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ 
@@ -176,21 +287,22 @@ export function ProductCard({
             className="overflow-hidden"
           >
             <div className="flex flex-wrap gap-1 pt-2">
-              {sizes.map((size) => (
+              <p className="text-xs text-gray-500 w-full mb-1">Size:</p>
+              {normalizedSizes.map((size, index) => (
                 <button
-                  key={size}
+                  key={`size-${index}-${size.label}`}
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setSelectedSize(selectedSize === size ? null : size)
-                  }}
-                  className={`px-2 py-1 text-xs border ${
-                    selectedSize === size
+                  onClick={(e) => handleSizeSelect(size, e)}
+                  disabled={!size.available}
+                  className={`px-3 py-1 text-xs border transition-colors ${
+                    selectedSize?.label === size.label
                       ? "border-black bg-black text-white"
-                      : "border-gray-300 hover:border-gray-400"
+                      : size.available
+                      ? "border-gray-300 hover:border-gray-400 hover:bg-gray-50"
+                      : "border-gray-200 bg-gray-100 text-gray-400 cursor-not-allowed"
                   }`}
                 >
-                  {size}
+                  {size.label}
                 </button>
               ))}
             </div>
@@ -198,7 +310,7 @@ export function ProductCard({
         )}
 
         {/* Color selector (visible on hover) */}
-        {colors.length > 0 && (
+        {normalizedColors.length > 0 && (
           <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ 
@@ -208,26 +320,35 @@ export function ProductCard({
             transition={{ duration: 0.2 }}
             className="overflow-hidden"
           >
-            <div className="flex flex-wrap gap-2 pt-2">
-              {colors.map((color) => (
+            <div className="flex flex-wrap gap-2 pt-2 items-center">
+              <p className="text-xs text-gray-500 w-full mb-1">Color:</p>
+              {normalizedColors.map((color, index) => (
                 <button
-                  key={color}
+                  key={`color-${index}-${color.name}`}
                   type="button"
-                  onClick={(e) => {
-                    e.preventDefault()
-                    setSelectedColor(selectedColor === color ? null : color)
-                  }}
-                  className={`w-5 h-5 rounded-full border ${
-                    selectedColor === color
-                      ? "border-2 border-black"
-                      : "border-gray-300 hover:border-gray-400"
-                    }`}
+                  onClick={(e) => handleColorSelect(color, e)}
+                  disabled={!color.available}
+                  className={`w-6 h-6 rounded-full border-2 transition-all relative ${
+                    selectedColor?.name === color.name
+                      ? "border-black scale-110 shadow-md"
+                      : color.available
+                      ? "border-gray-300 hover:border-gray-400 hover:scale-105"
+                      : "border-gray-200 opacity-50 cursor-not-allowed"
+                  }`}
                   style={{ 
-                    backgroundColor: color.toLowerCase(),
-                    cursor: 'pointer'
+                    backgroundColor: typeof color.value === 'string' 
+                      ? color.value.toLowerCase() 
+                      : '#cccccc'
                   }}
-                  title={color}
-                />
+                  title={color.available ? color.name : `${color.name} (Out of Stock)`}
+                  aria-label={`Select color ${color.name}`}
+                >
+                  {!color.available && (
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-full h-px bg-gray-400 rotate-45"></div>
+                    </div>
+                  )}
+                </button>
               ))}
             </div>
           </motion.div>
@@ -237,10 +358,10 @@ export function ProductCard({
         <div className="block md:hidden pt-2">
           <Button
             onClick={handleAddToCart}
-            disabled={!inStock || isAddingToCart}
+            disabled={!isProductInStock || isAddingToCart || (normalizedSizes.length > 0 && !selectedSize) || (normalizedColors.length > 0 && !selectedColor)}
             variant="outline"
             size="sm"
-            className="w-full text-sm"
+            className="w-full text-sm add-to-cart-btn"
           >
             {isAddingToCart ? (
               "Adding..."
@@ -252,6 +373,24 @@ export function ProductCard({
             )}
           </Button>
         </div>
+
+        {/* Selection indicators */}
+        {(selectedSize || selectedColor) && (
+          <div className="text-xs text-gray-500 pt-1 space-y-1">
+            {selectedSize && (
+              <p className="flex items-center">
+                <span className="mr-1">✓</span>
+                Size: <span className="font-medium ml-1">{selectedSize.label}</span>
+              </p>
+            )}
+            {selectedColor && (
+              <p className="flex items-center">
+                <span className="mr-1">✓</span>
+                Color: <span className="font-medium ml-1">{selectedColor.name}</span>
+              </p>
+            )}
+          </div>
+        )}
       </div>
     </motion.div>
   )

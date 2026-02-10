@@ -159,12 +159,7 @@ export default function AccountPage() {
                   </div>
                 </Link>
 
-                <Link href="/account/notifications">
-                  <div className="bg-white border rounded-lg p-4 hover:shadow-md transition-shadow">
-                    <h3 className="font-semibold mb-2">Notifications</h3>
-                    <p className="text-sm text-gray-600">Manage your preferences</p>
-                  </div>
-                </Link>
+               
               </div>
             </div>
           </div>

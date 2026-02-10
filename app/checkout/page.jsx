@@ -1,6 +1,8 @@
+// app/checkout/page.jsx
 "use client"
 
 import { useState } from "react"
+import { useRouter } from "next/navigation"
 import Image from "next/image"
 import Link from "next/link"
 import { Lock, CreditCard, Truck, ArrowLeft, Trash2, Loader2 } from "lucide-react"
@@ -15,6 +17,7 @@ import { useCart } from "@/components/cart-provider"
 import { toast } from "sonner"
 
 export default function CheckoutPage() {
+  const router = useRouter()
   const { items, totalPrice, removeItem, clearCart } = useCart()
   const [paymentMethod, setPaymentMethod] = useState("card")
   const [isProcessing, setIsProcessing] = useState(false)
@@ -35,18 +38,23 @@ export default function CheckoutPage() {
       const orderData = {
         items,
         total,
+        shipping: shipping,
+        tax: tax,
+        subtotal: totalPrice,
         shippingAddress: {
           firstName: data.firstName,
           lastName: data.lastName,
           email: data.email,
           phone: data.phone,
-          street: data.address,
+          address: data.address,
+          apartment: data.apartment || "",
           city: data.city,
           state: data.state,
           zip: data.zip,
           country: "United States"
         },
-        paymentMethod
+        paymentMethod,
+        status: "pending"
       }
 
       // Send order to API
@@ -65,9 +73,12 @@ export default function CheckoutPage() {
       }
 
       toast.success("Order placed successfully!")
-      clearCart()
+      
+      // Clear cart after successful order
+      await clearCart()
+      
       // Redirect to order confirmation
-      window.location.href = `/account/orders/${result.orderId}`
+      router.push(`/order/${result.orderId}`)
       
     } catch (error) {
       console.error("Checkout error:", error)
@@ -104,13 +115,13 @@ export default function CheckoutPage() {
       <div className="pt-24 pb-20">
         <div className="max-w-7xl mx-auto px-6 lg:px-12">
           {/* Back link */}
-          <Link 
-            href="/cart" 
+          <button
+            onClick={() => router.back()}
             className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-black transition-colors mb-8"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Cart
-          </Link>
+          </button>
 
           <h1 className="text-3xl lg:text-4xl font-serif mb-12">
             Checkout
@@ -316,6 +327,7 @@ export default function CheckoutPage() {
                         </Label>
                         <Input
                           id="cardNumber"
+                          name="cardNumber"
                           required
                           placeholder="1234 5678 9012 3456"
                           className="mt-2"
@@ -329,6 +341,7 @@ export default function CheckoutPage() {
                           </Label>
                           <Input
                             id="expiry"
+                            name="expiry"
                             required
                             placeholder="MM / YY"
                             className="mt-2"
@@ -341,6 +354,7 @@ export default function CheckoutPage() {
                           </Label>
                           <Input
                             id="cvv"
+                            name="cvv"
                             required
                             placeholder="123"
                             className="mt-2"
@@ -359,50 +373,29 @@ export default function CheckoutPage() {
                     Order Summary
                   </h2>
 
-                  <div className="space-y-6 mb-8">
-                    {items.map((item) => (
-                      <div key={`${item.product._id}-${item.selectedSize}-${item.selectedColor}`} className="flex gap-4">
-                        <div className="relative w-20 h-20 bg-gray-200 overflow-hidden flex-shrink-0">
-                          <Image
-                            src={item.product.image || "/placeholder.svg"}
-                            alt={item.product.name}
-                            fill
-                            className="object-cover"
-                          />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <h3 className="text-sm font-medium truncate">
-                            {item.product.name}
-                          </h3>
-                          {(item.selectedColor || item.selectedSize) && (
-                            <p className="text-xs text-gray-500 mt-1">
+                  {/* Προϊόντα στο Order Summary - ΤΟ ΝΕΟ ΜΕΡΟΣ */}
+                  <div className="space-y-4 mb-6">
+                    {items.map((item) => {
+                      const itemKey = `${item.product.id}-${item.selectedSize}-${item.selectedColor}`
+                      return (
+                        <div key={itemKey} className="space-y-1">
+                          <div className="flex justify-between">
+                            <span className="font-medium">{item.product.name}</span>
+                            <span className="font-medium">
+                              ${(item.product.price * item.quantity).toFixed(2)}
+                            </span>
+                          </div>
+                          <div className="flex justify-between text-sm text-gray-600">
+                            <span>
                               {item.selectedColor && item.selectedColor}
                               {item.selectedColor && item.selectedSize && " / "}
                               {item.selectedSize && item.selectedSize}
-                            </p>
-                          )}
-                          <p className="text-xs text-gray-500 mt-1">
-                            Qty: {item.quantity}
-                          </p>
-                          <p className="text-sm mt-2">
-                            ${(item.product.price * item.quantity).toFixed(2)}
-                          </p>
+                              <span className="ml-2">Qty: {item.quantity}</span>
+                            </span>
+                          </div>
                         </div>
-
-                        <button
-                          type="button"
-                          onClick={() => removeItem(
-                            item.product._id,
-                            item.selectedSize,
-                            item.selectedColor
-                          )}
-                          className="text-gray-400 hover:text-black transition-colors"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
+                      )
+                    })}
                   </div>
 
                   <Separator className="mb-6" />

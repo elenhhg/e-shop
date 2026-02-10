@@ -23,7 +23,13 @@ export function CollectionGrid() {
   }, [])
 
   if (loading) {
-    return <p className="text-center py-12">Loading products...</p>
+    return (
+      <section className="py-24 lg:py-32 px-6 lg:px-8 bg-background">
+        <div className="max-w-7xl mx-auto text-center py-12">
+          <p>Loading products...</p>
+        </div>
+      </section>
+    )
   }
 
   return (
@@ -50,7 +56,7 @@ export function CollectionGrid() {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-12">
           {products.map((product, index) => (
             <div
-              key={product._id}
+              key={product._id || product.id}
               className={
                 index % 3 === 0
                   ? "lg:pt-12"
@@ -59,7 +65,19 @@ export function CollectionGrid() {
                   : ""
               }
             >
-              <ProductCard {...product} index={index} />
+              <ProductCard
+                slug={product.slug || product.id}
+                name={product.name}
+                price={product.price}
+                image={product.images?.[0] || product.image}
+                hoverImage={product.images?.[1] || product.images?.[0]}
+                category={product.category}
+                index={index}
+                product={product}
+                sizes={product.sizes || []}
+                colors={product.colors || []}
+                inStock={product.inStock !== false}
+              />
             </div>
           ))}
         </div>

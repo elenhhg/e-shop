@@ -1,3 +1,4 @@
+// components/mini-cart.js
 "use client"
 
 import Image from "next/image"
@@ -8,7 +9,15 @@ import Link from "next/link"
 import { useCart } from "./cart-provider"
 
 export function MiniCart({ isOpen, onClose }) {
-  const { items, removeItem, updateQuantity, totalPrice } = useCart()
+  const { items, removeItem, updateQuantity, totalPrice, isLoading } = useCart()
+
+  const handleRemove = async (productId, selectedSize, selectedColor) => {
+    await removeItem(productId, selectedSize, selectedColor)
+  }
+
+  const handleUpdateQuantity = async (productId, newQuantity, selectedSize, selectedColor) => {
+    await updateQuantity(productId, newQuantity, selectedSize, selectedColor)
+  }
 
   return (
     <AnimatePresence>
@@ -58,7 +67,7 @@ export function MiniCart({ isOpen, onClose }) {
                 <div className="space-y-6">
                   {items.map((item, index) => (
                     <motion.div
-                      key={`${item.product._id || item.product.id}-${item.selectedSize}-${item.selectedColor}`}
+                      key={`${item.product.id}-${item.selectedSize}-${item.selectedColor}-${index}`}
                       initial={{ opacity: 0, y: 20 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ duration: 0.3, delay: index * 0.1 }}
@@ -85,41 +94,44 @@ export function MiniCart({ isOpen, onClose }) {
                         )}
                         <div className="flex items-center gap-3">
                           <button
-                            onClick={() =>
-                              updateQuantity(
-                                item.product._id || item.product.id,
-                                item.quantity - 1,
-                                item.selectedSize,
-                                item.selectedColor
-                              )
-                            }
+                            onClick={() => handleUpdateQuantity(
+                              item.product.id,
+                              item.quantity - 1,
+                              item.selectedSize,
+                              item.selectedColor
+                            )}
                             className="p-1 hover:opacity-60 transition-opacity"
+                            disabled={isLoading}
                           >
                             <Minus className="h-3 w-3" />
                           </button>
                           <span className="text-sm w-6 text-center">{item.quantity}</span>
                           <button
-                            onClick={() =>
-                              updateQuantity(
-                                item.product._id || item.product.id,
-                                item.quantity + 1,
-                                item.selectedSize,
-                                item.selectedColor
-                              )
-                            }
+                            onClick={() => handleUpdateQuantity(
+                              item.product.id,
+                              item.quantity + 1,
+                              item.selectedSize,
+                              item.selectedColor
+                            )}
                             className="p-1 hover:opacity-60 transition-opacity"
+                            disabled={isLoading}
                           >
                             <Plus className="h-3 w-3" />
                           </button>
                         </div>
                       </div>
                       <div className="flex flex-col items-end justify-between">
-                        <span className="text-sm">${(item.product.price * item.quantity).toLocaleString()}</span>
+                        <span className="text-sm">
+                          ${(item.product.price * item.quantity).toLocaleString()}
+                        </span>
                         <button
-                          onClick={() =>
-                            removeItem(item.product._id || item.product.id, item.selectedSize, item.selectedColor)
-                          }
+                          onClick={() => handleRemove(
+                            item.product.id,
+                            item.selectedSize,
+                            item.selectedColor
+                          )}
                           className="text-xs text-muted-foreground underline hover:text-foreground transition-colors"
+                          disabled={isLoading}
                         >
                           Remove
                         </button>
@@ -137,13 +149,21 @@ export function MiniCart({ isOpen, onClose }) {
                   <span className="text-muted-foreground">Subtotal</span>
                   <span>${totalPrice.toLocaleString()}</span>
                 </div>
-                <p className="text-xs text-muted-foreground">Shipping and taxes calculated at checkout</p>
+                <p className="text-xs text-muted-foreground">
+                  Shipping and taxes calculated at checkout
+                </p>
                 <Link href="/checkout" onClick={onClose}>
-                  <Button className="w-full py-6 text-sm tracking-[0.2em] uppercase">Proceed to Checkout</Button>
+                  <Button 
+                    className="w-full py-6 text-sm tracking-[0.2em] uppercase"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? "Loading..." : "Proceed to Checkout"}
+                  </Button>
                 </Link>
                 <button
                   onClick={onClose}
                   className="w-full text-center text-sm tracking-wide underline underline-offset-4 hover:no-underline transition-all"
+                  disabled={isLoading}
                 >
                   Continue Shopping
                 </button>

@@ -127,3 +127,6 @@
     @apply bg-background text-foreground;
   }
 }
+:root {
+  --background: #fbefe2;
+}

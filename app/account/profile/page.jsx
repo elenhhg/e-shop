@@ -243,40 +243,7 @@ export default function ProfilePage() {
                 </div>
               </form>
 
-              {/* Account Security Section */}
-              <div className="mt-12 pt-8 border-t border-gray-200">
-                <h3 className="text-lg font-semibold mb-4">Account Security</h3>
-                <div className="space-y-4">
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium mb-1">Password</p>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Change your password to keep your account secure
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push("/account/change-password")}
-                    >
-                      Change Password
-                    </Button>
-                  </div>
-
-                  <div className="p-4 bg-gray-50 rounded-lg">
-                    <p className="text-sm font-medium mb-1">Two-Factor Authentication</p>
-                    <p className="text-sm text-gray-600 mb-3">
-                      Add an extra layer of security to your account
-                    </p>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => router.push("/account/security")}
-                    >
-                      Set up 2FA
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
+            
               {/* Danger Zone */}
               <div className="mt-12 pt-8 border-t border-gray-200">
                 <h3 className="text-lg font-semibold mb-4 text-red-600">Danger Zone</h3>
