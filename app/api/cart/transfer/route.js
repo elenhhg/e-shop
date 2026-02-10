@@ -1,14 +1,15 @@
-// app/api/cart/transfer/route.js
+// app/api/cart/transfer/route.js - ΔΙΟΡΘΩΜΕΝΟ
 import { NextResponse } from "next/server"
 import dbConnect from "@/lib/mongodb"
 import Cart from "@/models/cart"
-import { auth } from "@clerk/nextjs"
+import { currentUser } from "@clerk/nextjs/server" // Αλλαγή: χρησιμοποίησε currentUser
 
 export async function POST(request) {
   try {
     await dbConnect()
     
-    const { userId: clerkUserId } = auth()
+    const user = await currentUser() // Αλλαγή: χρησιμοποίησε currentUser()
+    const clerkUserId = user?.id
     const { guestUserId } = await request.json()
     
     console.log("Transferring cart from guest:", guestUserId, "to user:", clerkUserId)
