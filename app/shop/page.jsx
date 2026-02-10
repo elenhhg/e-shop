@@ -83,7 +83,7 @@ export default function ShopPage() {
           <h1 className="font-serif text-5xl md:text-7xl mb-6">
             The Collection
           </h1>
-          <p className="max-w-xl mx-auto text-muted-foreground text-lg">
+          <p className="text-sm sm:text-base tracking-[0.2em] font-light">
             Thoughtfully curated pieces to transform your space.
           </p>
         </motion.div>

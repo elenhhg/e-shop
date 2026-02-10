@@ -30,7 +30,7 @@ export default function HeritagePage() {
               The Story of Haven
             </h2>
 
-            <p className="mt-4 text-xs sm:text-sm lg:text-lg text-muted-foreground max-w-md mx-auto lg:mx-0">
+            <p className="text-sm sm:text-base tracking-[0.2em] font-light">
               A quiet exploration of materials, memory, and the poetry of crafted space.
             </p>
           </motion.div>
@@ -84,7 +84,7 @@ export default function HeritagePage() {
               Materials that breathe
             </h2>
 
-            <p className="text-xs sm:text-sm lg:text-base text-muted-foreground leading-relaxed max-w-md">
+            <p className="text-sm sm:text-base tracking-[0.2em] font-light">
               We work with wood, stone, clay, linen and natural fibers — materials that age,
               change, and carry the passage of time within their surface.
               <br /><br />
@@ -114,7 +114,7 @@ export default function HeritagePage() {
           <div>
             <h2 className="font-serif text-4xl sm:text-5xl mb-6">Our Studio</h2>
 
-            <p className="text-background/80 max-w-md leading-relaxed mx-auto">
+            <p className="text-sm sm:text-base tracking-[0.2em] font-light">
               A quiet environment designed to slow down perception.  
               A place where light, scale, and silence shape the experience of space,
               and where every object is allowed to exist without urgency.

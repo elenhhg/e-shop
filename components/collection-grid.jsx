@@ -47,7 +47,7 @@ export function CollectionGrid() {
           <h2 className="font-serif text-3xl lg:text-5xl mb-4">
             Curated for You
           </h2>
-          <p className="text-muted-foreground tracking-wide max-w-md mx-auto">
+          <p className="text-sm sm:text-base tracking-[0.2em] font-light">
             Handpicked pieces that transform houses into homes
           </p>
         </motion.div>
