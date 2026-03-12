@@ -9,7 +9,6 @@ const menuItems = [
   { href: "/account/profile", label: "Profile", icon: User },
   { href: "/account/orders", label: "Orders", icon: Package },
   { href: "/account/addresses", label: "Addresses", icon: MapPin },
-  { href: "/account/notifications", label: "Notifications", icon: Bell },
   { href: "/account/payment", label: "Payment Methods", icon: CreditCard },
 ]
 

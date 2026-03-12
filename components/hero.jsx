@@ -109,14 +109,13 @@ function ParallaxImages() {
       {/* Δεύτερη εικόνα χωρίς κείμενο */}
       <ParallaxImg src="/images/image4.jpg" alt="" start={200} end={-250} className="w-full sm:w-2/3 mx-auto" />
 
-      {/* Τρίτη εικόνα με κείμενο */}
-      {/* Τρίτη εικόνα με κείμενο */}
+    
 <div className="flex flex-col lg:flex-row items-center gap-8 sm:gap-12 lg:gap-40 pb-40 sm:pb-60 lg:pb-80">
   <ParallaxImgWithText
     src="/images/image2.jpg"
     alt=""
-    start={-150} // μικρότερο start για να μην φτάνει στο άλλο section
-    end={150}    // μικρότερο end για πιο ελεγχόμενο parallax
+    start={-150} 
+    end={150}   
     text="Explore our handwoven textiles and artisanal vases, designed to bring timeless texture, color, and elegance into your home."
     reverse
   />

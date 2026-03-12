@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
+import { createPortal } from "react-dom"
 import { useParams } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { PremiumFooter } from "@/components/footer"
@@ -9,12 +10,12 @@ import { ProductDetailsAccordion } from "@/components/product-details"
 import { RelatedProducts } from "@/components/related-product"
 import { Button } from "@/components/ui/button"
 import { products } from "@/lib/product"
-import { Heart, Share2, Truck, RotateCcw, Shield, ShoppingBag } from "lucide-react"
+import { Heart, Share2, Truck, RotateCcw, Shield, ShoppingBag, Check, X } from "lucide-react"
 import Link from "next/link"
 import { CartProvider } from "@/components/cart-provider"
 import { useCart } from "@/components/cart-provider"
 
-// Helper functions
+// Helper functions (ίδιες)
 const getSizeString = (size) => {
   if (typeof size === 'string') return size
   if (typeof size === 'object' && size !== null) {
@@ -58,11 +59,32 @@ function ProductPageContent() {
   const [selectedSize, setSelectedSize] = useState(null)
   const [selectedColor, setSelectedColor] = useState(null)
   const [isAddingToCart, setIsAddingToCart] = useState(false)
+  
+  // Modal states
+  const [showAddedModal, setShowAddedModal] = useState(false)
+  const [showValidationModal, setShowValidationModal] = useState(false)
+  const [validationMessage, setValidationMessage] = useState("")
+  
+  // Refs
+  const addedTimeoutRef = useRef(null)
+  const [mounted, setMounted] = useState(false)
 
   const productId = Array.isArray(params?.id) ? params.id[0] : params?.id
   const product = products.find((p) => p.id === productId) || products[0]
   
   const { addItem } = useCart()
+
+  useEffect(() => {
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    return () => {
+      if (addedTimeoutRef.current) {
+        clearTimeout(addedTimeoutRef.current)
+      }
+    }
+  }, [])
 
   // Normalize sizes
   const normalizedSizes = Array.isArray(product.sizes) 
@@ -89,12 +111,14 @@ function ProductPageContent() {
 
   const handleAddToCart = () => {
     if (normalizedSizes.length > 0 && !selectedSize) {
-      alert("Please select a size")
+      setValidationMessage("Please select a size")
+      setShowValidationModal(true)
       return
     }
 
     if (normalizedColors.length > 0 && !selectedColor) {
-      alert("Please select a color")
+      setValidationMessage("Please select a color")
+      setShowValidationModal(true)
       return
     }
 
@@ -115,8 +139,20 @@ function ProductPageContent() {
         selectedSize ? selectedSize.label : null,
         selectedColor ? selectedColor.name : null
       )
+      
+      // Show added modal
+      setShowAddedModal(true)
+      if (addedTimeoutRef.current) {
+        clearTimeout(addedTimeoutRef.current)
+      }
+      addedTimeoutRef.current = setTimeout(() => {
+        setShowAddedModal(false)
+      }, 2000)
+      
     } catch (error) {
       console.error("Error adding to cart:", error)
+      setValidationMessage("Failed to add item. Please try again.")
+      setShowValidationModal(true)
     } finally {
       setIsAddingToCart(false)
     }
@@ -125,6 +161,50 @@ function ProductPageContent() {
   // Check if product is in stock
   const isProductInStock = normalizedColors.some(color => color.available) && 
     normalizedSizes.some(size => size.available)
+
+  // Modal content
+  const addedModalContent = (
+    <div className="fixed bottom-6 left-1/2 transform -translate-x-1/2 z-[99999] bg-black text-white px-6 py-3 rounded-full shadow-lg flex items-center gap-3">
+      <Check className="h-5 w-5 text-green-400" />
+      <span className="text-sm font-medium">Added to cart</span>
+    </div>
+  )
+
+  const validationModalContent = (
+    <>
+      <div 
+        className="fixed inset-0 bg-black/20 backdrop-blur-sm z-[99998]" 
+        onClick={() => setShowValidationModal(false)}
+      />
+      <div className="fixed top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 z-[99999] bg-white rounded-lg shadow-xl p-6 max-w-sm w-full mx-4">
+        <div className="flex justify-between items-start mb-4">
+          <h3 className="text-lg font-semibold">Selection Required</h3>
+          <button
+            onClick={() => setShowValidationModal(false)}
+            className="p-1 hover:bg-gray-100 rounded-full"
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+        <p className="text-gray-600 mb-6">{validationMessage}</p>
+        <div className="flex justify-end">
+          <Button
+            onClick={() => setShowValidationModal(false)}
+            variant="outline"
+            className="mr-2"
+          >
+            Cancel
+          </Button>
+          <Button
+            onClick={() => setShowValidationModal(false)}
+            className="bg-black text-white hover:bg-gray-800"
+          >
+            OK
+          </Button>
+        </div>
+      </div>
+    </>
+  )
 
   return (
     <main className="min-h-screen bg-background">
@@ -333,6 +413,14 @@ function ProductPageContent() {
       </div>
 
       <PremiumFooter />
+
+      {/* Modals */}
+      {mounted && (
+        <>
+          {showAddedModal && createPortal(addedModalContent, document.body)}
+          {showValidationModal && createPortal(validationModalContent, document.body)}
+        </>
+      )}
     </main>
   )
 }

@@ -12,6 +12,31 @@ const SettingsSchema = new mongoose.Schema(
   { _id: false }
 )
 
+const PaymentMethodSchema = new mongoose.Schema(
+  {
+    type: { 
+      type: String, 
+      enum: ['card', 'paypal'], 
+      default: 'card' 
+    },
+    isDefault: { type: Boolean, default: false },
+    
+    // Card fields
+    cardLast4: String,
+    cardBrand: String,
+    cardExpMonth: String,
+    cardExpYear: String,
+    cardHolderName: String,
+    
+    // PayPal fields
+    paypalEmail: String,
+    
+    // For Stripe integration (future)
+    stripePaymentMethodId: String,
+  },
+  { timestamps: true }
+)
+
 const UserSchema = new mongoose.Schema(
   {
     clerkId: { 
@@ -36,6 +61,7 @@ const UserSchema = new mongoose.Schema(
         analyticsCookies: true,
       })
     },
+    paymentMethods: [PaymentMethodSchema],
   },
   { timestamps: true }
 )
